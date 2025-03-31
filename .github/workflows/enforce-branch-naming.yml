@@ -40,9 +40,20 @@ jobs:
         run: |
           echo "Checking branch name: $BRANCH_NAME"
 
-          # ✅ Always validate, even for new branches
+          # ✅ Skip validation for the main branch
+          if [[ "$BRANCH_NAME" == "main" ]]; then
+              echo "✅ Skipping branch name validation for main."
+              exit 0
+          fi
+
+          # ✅ Validate branch name (must follow KAAM-<number> format)
           if [[ ! "$BRANCH_NAME" =~ ^KAAM-[0-9]+$ ]]; then
               echo "❌ ERROR: Invalid branch name '$BRANCH_NAME'"
+              echo "✅ The branch name must follow this format: KAAM-<issue-number>"
+              echo "   - Example: KAAM-123"
+              echo ""
+              echo "🔄 Rename your branch using the following command:"
+              echo "  git branch -m $BRANCH_NAME KAAM-<issue-number>"
               exit 1
           fi
 
