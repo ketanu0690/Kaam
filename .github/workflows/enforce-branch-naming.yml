@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run a one-line script
+        run: echo Hello, world!
+      - name: Run a multi-line script
+        run: |
+          echo Add other actions to build,
+          echo test, and deploy your project.
+
+  validate_branch_name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Determine Branch Name
+        id: get_branch
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "BRANCH_NAME=${{ github.head_ref }}" >> $GITHUB_ENV
+          else
+            echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          fi
+
+      - name: Validate Branch Name
+        run: |
+          echo "Checking branch name: $BRANCH_NAME"
+
+          # Skip validation if pushing to main
+          if [[ "$BRANCH_NAME" == "main" ]]; then
+              echo "✅ Skipping branch name validation for main."
+              exit 0
+          fi
+
+          # Check if branch follows KAAM-<number> format
+          if [[ ! "$BRANCH_NAME" =~ ^KAAM-[0-9]+$ ]]; then
+              echo "❌ ERROR: Invalid branch name '$BRANCH_NAME'"
+              echo "✅ The branch name must follow this format: KAAM-<issue-number>"
+              echo "   - <issue-number> must be numeric only (no letters, no descriptions)"
+              echo ""
+              echo "🔄 Rename your branch using the following command:"
+              echo "  git branch -m $BRANCH_NAME KAAM-<issue-number>"
+              exit 1
+          fi
+
+          echo "✅ Branch name is valid."
